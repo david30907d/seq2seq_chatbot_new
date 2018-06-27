@@ -103,3 +103,13 @@ def sentence2enco(sentence, word2id):
     #调用createBatch构造batch
     batch = createBatch([[wordIds, []]])
     return batch
+
+def gensim2file(filepath):
+    import gensim
+    model = gensim.models.KeyedVectors.load_word2vec_format(filepath, binary=True)
+    word2id = {}
+    id2word = {}
+    for keyword, value in model.vocab.items():
+        word2id[keyword] = value.index
+        id2word[value.index] = keyword
+        assert keyword == model.index2word[value.index]
