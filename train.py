@@ -15,10 +15,10 @@ tf.app.flags.DEFINE_integer('numEpochs', 30, 'Maximum # of training epochs')
 tf.app.flags.DEFINE_integer('steps_per_checkpoint', 100, 'Save model checkpoint every this iteration')
 tf.app.flags.DEFINE_string('model_dir', 'model/', 'Path to save model checkpoints')
 tf.app.flags.DEFINE_string('model_name', 'chatbot.ckpt', 'File name used for model checkpoints')
+tf.app.flags.DEFINE_string('data_path', 'gensim2file.pkl', 'Filepath of intput data')
 FLAGS = tf.app.flags.FLAGS
 
-data_path = 'E:\PycharmProjects\seq2seq_chatbot\seq2seq_chatbot_new\data\dataset-cornell-length10-filter1-vocabSize40000.pkl'
-word2id, id2word, trainingSamples = loadDataset(data_path)
+word2id, id2word, trainingSamples = loadDataset(FLAGS.data_path)
 
 with tf.Session() as sess:
     model = Seq2SeqModel(FLAGS.rnn_size, FLAGS.num_layers, FLAGS.embedding_size, FLAGS.learning_rate, word2id,

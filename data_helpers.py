@@ -7,6 +7,8 @@ import nltk
 import numpy as np
 import pickle
 import random
+import gensim, subprocess, json, tqdm
+from udicOpenData.stopwords import *
 
 padToken, goToken, eosToken, unknownToken = 0, 1, 2, 3
 
@@ -105,11 +107,46 @@ def sentence2enco(sentence, word2id):
     return batch
 
 def gensim2file(filepath):
-    import gensim
     model = gensim.models.KeyedVectors.load_word2vec_format(filepath, binary=True)
-    word2id = {}
-    id2word = {}
+    result = {
+        'word2id':{
+            '<pad>':0,
+            '<go>':1,
+            '<eos>':2,
+            '<unknown>':3
+        },
+        'id2word':{
+            0:'<pad>',
+            1:'<go>',
+            2:'<eos>',
+            3:'<unknown>'
+        },
+        'trainingSamples':[]
+    }
     for keyword, value in model.vocab.items():
-        word2id[keyword] = value.index
-        id2word[value.index] = keyword
-        assert keyword == model.index2word[value.index]
+        # +4 because we already define 4 word id
+        # padToken, goToken, eosToken, unknownToken = 0, 1, 2, 3
+        # so need to +4 to avoid id collision
+        newid = value.index + 4
+        result['word2id'][keyword] = newid
+        result['id2word'][newid] = keyword
+
+    # download sogou data and turn sentences into wordID
+    subprocess.call(['python3', 'sogou.py'])
+    for new in tqdm.tqdm(json.load(open('sogou.json', 'r'))):
+        content = new['content']
+        contenttitle = new['contenttitle']
+        result['trainingSamples'].append([
+            [result['word2id'].get(i, '3') for i in jieba.cut(content)], 
+            [result['word2id'].get(i, '3') for i in jieba.cut(contenttitle)]
+        ])
+
+    pickle.dump(result, open('gensim2file.pkl', 'wb'))
+
+if __name__ == '__main__':
+    import argparse
+    myParser = argparse.ArgumentParser()
+    myParser.add_argument('-f', '--filepath', type=str, help="filepath of word2vec model")
+    myParser.add_argument('-rest', '--removestopword', type=bool, help="remove stopword", default=False)
+    args = myParser.parse_args()
+    gensim2file(args.filepath)
