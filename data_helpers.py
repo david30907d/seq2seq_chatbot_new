@@ -1,13 +1,5 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import os
-import nltk
+import os, nltk, pickle, random, jieba, gensim, subprocess, json, tqdm
 import numpy as np
-import pickle
-import random
-import gensim, subprocess, json, tqdm
 from udicOpenData.stopwords import *
 
 padToken, goToken, eosToken, unknownToken = 0, 1, 2, 3
@@ -84,7 +76,7 @@ def getBatches(data, batch_size):
         batches.append(batch)
     return batches
 
-def sentence2enco(sentence, word2id):
+def sentence2enco(sentence, word2id, lang):
     '''
     测试的时候将用户输入的句子转化为可以直接feed进模型的数据，现将句子转化成id，然后调用createBatch处理
     :param sentence: 用户输入的句子
@@ -94,10 +86,13 @@ def sentence2enco(sentence, word2id):
     '''
     if sentence == '':
         return None
-    #分词
-    tokens = nltk.word_tokenize(sentence)
-    if len(tokens) > 20:
-        return None
+    if lang == 'en':
+        #分词
+        tokens = nltk.word_tokenize(sentence)
+        if len(tokens) > 20:
+            return None
+    elif lang == 'zh':
+        tokens = jieba.cut(sentence)
     #将每个单词转化为id
     wordIds = []
     for token in tokens:
