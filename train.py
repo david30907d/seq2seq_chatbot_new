@@ -20,8 +20,18 @@ FLAGS = tf.app.flags.FLAGS
 checkpoint_path = os.path.join(FLAGS.model_dir, FLAGS.model_name)
 word2id, id2word, trainingSamples = loadDataset(FLAGS.data_path)
 
-with tf.Session() as sess:
-    model = Seq2SeqModel(FLAGS.rnn_size, FLAGS.num_layers, FLAGS.embedding_size, FLAGS.learning_rate, word2id, mode='train', use_attention=True, beam_search=False, beam_size=5, max_gradient_norm=5.0, gpu_num='0')
+config = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True)
+config.gpu_options.allow_growth = True
+model = Seq2SeqModel(FLAGS.rnn_size, FLAGS.num_layers, FLAGS.embedding_size, FLAGS.learning_rate, word2id, mode='train', use_attention=True, beam_search=False, beam_size=5, max_gradient_norm=5.0, gpu_num='0')
+print('=============================================================')
+print('=============================================================')
+print('=============================================================')
+print('start building decoder model')
+print('=============================================================')
+print('=============================================================')
+print('=============================================================')
+decodingModel = Seq2SeqModel(FLAGS.rnn_size, FLAGS.num_layers, FLAGS.embedding_size, FLAGS.learning_rate, word2id, mode='decode', use_attention=True, beam_search=False, beam_size=5, max_gradient_norm=5.0, gpu_num='1')
+with tf.Session(config=config) as sess:
     ckpt = tf.train.get_checkpoint_state(FLAGS.model_dir)
     if ckpt and tf.train.checkpoint_exists(ckpt.model_checkpoint_path):
         print('================================')
@@ -50,9 +60,8 @@ with tf.Session() as sess:
                 perplexity = math.exp(float(loss)) if loss < 300 else float('inf')
                 tqdm.write("----- Step %d -- Loss %.2f -- Perplexity %.2f" % (current_step, loss, perplexity))
                 summary_writer.add_summary(summary, current_step)
-                with tf.Session() as predic_sess:
+                with tf.Session(config=config) as predic_sess:
                     # create a Seq2SeqModel for decoding
-                    decodingModel = Seq2SeqModel(FLAGS.rnn_size, FLAGS.num_layers, FLAGS.embedding_size, FLAGS.learning_rate, word2id, mode='decode', use_attention=True, beam_search=False, beam_size=5, max_gradient_norm=5.0, gpu_num='1')
                     print('================================')
                     print('Decoding Mode:')
                     print('Reloading model parameters..')
