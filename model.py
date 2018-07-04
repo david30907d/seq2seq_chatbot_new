@@ -4,8 +4,7 @@ from tensorflow.python.util import nest
 from data_helpers import sentence2enco
 
 class Seq2SeqModel():
-    def __init__(self, rnn_size, num_layers, embedding_size, learning_rate, word_to_idx, mode, use_attention,
-                 beam_search, beam_size, max_gradient_norm=5.0, lang='zh', gpu_num='0'):
+    def __init__(self, rnn_size, num_layers, embedding_size, learning_rate, word_to_idx, mode, use_attention, beam_search, beam_size, max_gradient_norm=5.0, lang='zh', gpu_num='0'):
         self.learing_rate = learning_rate
         self.embedding_size = embedding_size
         self.rnn_size = rnn_size
@@ -64,9 +63,7 @@ class Seq2SeqModel():
                 # 使用dynamic_rnn构建LSTM模型，将输入编码成隐层向量。
                 # encoder_outputs用于attention，batch_size*encoder_inputs_length*rnn_size,
                 # encoder_state用于decoder的初始化状态，batch_size*rnn_szie
-                encoder_outputs, encoder_state = tf.nn.dynamic_rnn(encoder_cell, encoder_inputs_embedded,
-                                                                   sequence_length=self.encoder_inputs_length,
-                                                                   dtype=tf.float32)
+                encoder_outputs, encoder_state = tf.nn.dynamic_rnn(encoder_cell, encoder_inputs_embedded, sequence_length=self.encoder_inputs_length, dtype=tf.float32)
 
             # =================================3, 定义模型的decoder部分
             with tf.variable_scope('decoder', reuse=tf.AUTO_REUSE):
@@ -79,13 +76,11 @@ class Seq2SeqModel():
                     encoder_inputs_length = tf.contrib.seq2seq.tile_batch(self.encoder_inputs_length, multiplier=self.beam_size)
 
                 #定义要使用的attention机制。
-                attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(num_units=self.rnn_size, memory=encoder_outputs,
-                                                                         memory_sequence_length=encoder_inputs_length)
+                attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(num_units=self.rnn_size, memory=encoder_outputs, memory_sequence_length=encoder_inputs_length)
                 #attention_mechanism = tf.contrib.seq2seq.LuongAttention(num_units=self.rnn_size, memory=encoder_outputs, memory_sequence_length=encoder_inputs_length)
                 # 定义decoder阶段要是用的LSTMCell，然后为其封装attention wrapper
                 decoder_cell = self._create_rnn_cell()
-                decoder_cell = tf.contrib.seq2seq.AttentionWrapper(cell=decoder_cell, attention_mechanism=attention_mechanism,
-                                                                   attention_layer_size=self.rnn_size, name='Attention_Wrapper')
+                decoder_cell = tf.contrib.seq2seq.AttentionWrapper(cell=decoder_cell, attention_mechanism=attention_mechanism, attention_layer_size=self.rnn_size, name='Attention_Wrapper')
                 #如果使用beam_seach则batch_size = self.batch_size * self.beam_size。因为之前已经复制过一次
                 batch_size = self.batch_size if not self.beam_search else self.batch_size * self.beam_size
                 #定义decoder阶段的初始化状态，直接使用encoder阶段的最后一个隐层状态进行赋值
@@ -99,23 +94,17 @@ class Seq2SeqModel():
                     decoder_input = tf.concat([tf.fill([self.batch_size, 1], self.word_to_idx['<go>']), ending], 1)
                     decoder_inputs_embedded = tf.nn.embedding_lookup(embedding, decoder_input)
                     #训练阶段，使用TrainingHelper+BasicDecoder的组合，这一般是固定的，当然也可以自己定义Helper类，实现自己的功能
-                    training_helper = tf.contrib.seq2seq.TrainingHelper(inputs=decoder_inputs_embedded,
-                                                                        sequence_length=self.decoder_targets_length,
-                                                                        time_major=False, name='training_helper')
-                    training_decoder = tf.contrib.seq2seq.BasicDecoder(cell=decoder_cell, helper=training_helper,
-                                                                       initial_state=decoder_initial_state, output_layer=output_layer)
+                    training_helper = tf.contrib.seq2seq.TrainingHelper(inputs=decoder_inputs_embedded, sequence_length=self.decoder_targets_length, time_major=False, name='training_helper')
+                    training_decoder = tf.contrib.seq2seq.BasicDecoder(cell=decoder_cell, helper=training_helper, initial_state=decoder_initial_state, output_layer=output_layer)
                     #调用dynamic_decode进行解码，decoder_outputs是一个namedtuple，里面包含两项(rnn_outputs, sample_id)
                     # rnn_output: [batch_size, decoder_targets_length, vocab_size]，保存decode每个时刻每个单词的概率，可以用来计算loss
                     # sample_id: [batch_size], tf.int32，保存最终的编码结果。可以表示最后的答案
-                    decoder_outputs, _, _ = tf.contrib.seq2seq.dynamic_decode(decoder=training_decoder,
-                                                                              impute_finished=True,
-                                                                        maximum_iterations=self.max_target_sequence_length)
+                    decoder_outputs, _, _ = tf.contrib.seq2seq.dynamic_decode(decoder=training_decoder, impute_finished=True, maximum_iterations=self.max_target_sequence_length)
                     # 根据输出计算loss和梯度，并定义进行更新的AdamOptimizer和train_op
                     self.decoder_logits_train = tf.identity(decoder_outputs.rnn_output)
                     self.decoder_predict_train = tf.argmax(self.decoder_logits_train, axis=-1, name='decoder_pred_train')
                     # 使用sequence_loss计算loss，这里需要传入之前定义的mask标志
-                    self.loss = tf.contrib.seq2seq.sequence_loss(logits=self.decoder_logits_train,
-                                                                 targets=self.decoder_targets, weights=self.mask)
+                    self.loss = tf.contrib.seq2seq.sequence_loss(logits=self.decoder_logits_train, targets=self.decoder_targets, weights=self.mask)
 
                     # Training summary for the current batch_loss
                     tf.summary.scalar('loss', self.loss)
@@ -133,19 +122,11 @@ class Seq2SeqModel():
                     # 如果使用则直接调用BeamSearchDecoder（里面已经实现了helper类）
                     # 如果不使用则调用GreedyEmbeddingHelper+BasicDecoder的组合进行贪婪式解码
                     if self.beam_search:
-                        inference_decoder = tf.contrib.seq2seq.BeamSearchDecoder(cell=decoder_cell, embedding=embedding,
-                                                                                 start_tokens=start_tokens, end_token=end_token,
-                                                                                 initial_state=decoder_initial_state,
-                                                                                 beam_width=self.beam_size,
-                                                                                 output_layer=output_layer)
+                        inference_decoder = tf.contrib.seq2seq.BeamSearchDecoder(cell=decoder_cell, embedding=embedding, start_tokens=start_tokens, end_token=end_token, initial_state=decoder_initial_state, beam_width=self.beam_size, output_layer=output_layer)
                     else:
-                        decoding_helper = tf.contrib.seq2seq.GreedyEmbeddingHelper(embedding=embedding,
-                                                                                   start_tokens=start_tokens, end_token=end_token)
-                        inference_decoder = tf.contrib.seq2seq.BasicDecoder(cell=decoder_cell, helper=decoding_helper,
-                                                                            initial_state=decoder_initial_state,
-                                                                            output_layer=output_layer)
-                    decoder_outputs, _, _ = tf.contrib.seq2seq.dynamic_decode(decoder=inference_decoder,
-                                                                    maximum_iterations=10)
+                        decoding_helper = tf.contrib.seq2seq.GreedyEmbeddingHelper(embedding=embedding, start_tokens=start_tokens, end_token=end_token)
+                        inference_decoder = tf.contrib.seq2seq.BasicDecoder(cell=decoder_cell, helper=decoding_helper, initial_state=decoder_initial_state, output_layer=output_layer)
+                    decoder_outputs, _, _ = tf.contrib.seq2seq.dynamic_decode(decoder=inference_decoder, maximum_iterations=10)
                     # 调用dynamic_decode进行解码，decoder_outputs是一个namedtuple，
                     # 对于不使用beam_search的时候，它里面包含两项(rnn_outputs, sample_id)
                     # rnn_output: [batch_size, decoder_targets_length, vocab_size]
