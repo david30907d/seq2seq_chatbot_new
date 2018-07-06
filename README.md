@@ -28,8 +28,6 @@ python3.5
 
 ## Contributors
 
-* __王浩丞__ []()
-* __Ｍartina__ []()
 * __張泰瑋__ [david](https://github.com/david30907d)
 
 ## License

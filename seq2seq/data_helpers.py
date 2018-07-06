@@ -139,6 +139,7 @@ def gensim2file(filepath, dataset):
                 [result['word2id'].get(i, '3') for i in jieba.cut(contenttitle)]
             ])
 
+    subprocess.call(['mkdir', 'data'])
     pickle.dump(result, open('data/gensim2file.pkl', 'wb'))
 
 if __name__ == '__main__':

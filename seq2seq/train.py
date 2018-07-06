@@ -46,4 +46,4 @@ with tf.Session(config=config) as sess:
                 perplexity = math.exp(float(loss)) if loss < 300 else float('inf')
                 tqdm.write("----- Step %d -- Loss %.2f -- Perplexity %.2f" % (current_step, loss, perplexity))
                 summary_writer.add_summary(summary, current_step)
-                subprocess.call(['python3', 'validation.py' '--batch_size', str(FLAGS.batch_size), '--data_path', str(FLAGS.data_path), '--rnn_size', str(FLAGS.rnn_size), '--embedding_size', str(FLAGS.embedding_size), '--numEpochs', str(FLAGS.numEpochs), '--CUDA', '1'])
+                subprocess.call(['python3', 'validation.py', '--batch_size', str(FLAGS.batch_size), '--data_path', str(FLAGS.data_path), '--rnn_size', str(FLAGS.rnn_size), '--embedding_size', str(FLAGS.embedding_size), '--numEpochs', str(FLAGS.numEpochs), '--CUDA', '1'])
