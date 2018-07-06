@@ -151,13 +151,6 @@ class Seq2SeqModel():
                       self.decoder_targets_length: batch.decoder_targets_length,
                       self.keep_prob_placeholder: 0.5,
                       self.batch_size: np.array([len(batch.encoder_inputs)], dtype=np.int32)[0]}
-        print('--------------------------------------')
-        print(len(batch.encoder_inputs))
-        print(batch)
-        b = sess.run([self.batch_size], feed_dict={self.batch_size:len(batch.encoder_inputs)})[0]
-        print(b, b.shape)
-        print('--------------------------------------')
-        # print(feed_dict)
         _, loss, summary = sess.run([self.train_op, self.loss, self.summary_op], feed_dict=feed_dict)
         return loss, summary
 
@@ -187,12 +180,12 @@ class Seq2SeqModel():
                     return " ".join(predict_seq)
 
         if isBatch == False:
-            batch = sentence2enco(inputData, self.word_to_idx, self.lang)
+            batch = sentence2enco(batch, self.word_to_idx, self.lang)
 
         #infer阶段只需要运行最后的结果，不需要计算loss，所以feed_dict只需要传入encoder_input相应的数据即可
-        feed_dict = {self.encoder_inputs: batch.encoder_inputs,
-                      self.encoder_inputs_length: batch.encoder_inputs_length,
+        feed_dict = {self.encoder_inputs: [batch],
+                      self.encoder_inputs_length: [len(batch)],
                       self.keep_prob_placeholder: 1.0,
-                      self.batch_size: len(batch.encoder_inputs)}
+                      self.batch_size: 1}
         predict = sess.run([self.decoder_predict_decode], feed_dict=feed_dict)
         return predict_ids_to_seq(predict, id2word, beam_szie)
