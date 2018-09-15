@@ -33,7 +33,11 @@ def predict_ids_to_seq(predict_ids, id2word, beam_szie):
             predict_seq = [id2word[idx] for idx in predict_list[0]]
             print(" ".join(predict_seq))
 
-with tf.Session() as sess:
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+CONFIG = tf.ConfigProto()
+CONFIG.gpu_options.allow_growth = True
+
+with tf.Session(config=CONFIG) as sess:
     model = Seq2SeqModel(FLAGS.rnn_size, FLAGS.num_layers, FLAGS.embedding_size, FLAGS.learning_rate, word2id,
                          mode='decode', use_attention=True, beam_search=True, beam_size=5, max_gradient_norm=5.0)
     ckpt = tf.train.get_checkpoint_state(FLAGS.model_dir)

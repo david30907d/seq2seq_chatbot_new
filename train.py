@@ -20,13 +20,17 @@ FLAGS = tf.app.flags.FLAGS
 data_path = 'data/train.pkl'
 word2id, id2word, trainingSamples = loadDataset(data_path)
 
-with tf.Session() as sess:
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+CONFIG = tf.ConfigProto()
+CONFIG.gpu_options.allow_growth = True
+
+with tf.Session(config=CONFIG) as sess:
     model = Seq2SeqModel(FLAGS.rnn_size, FLAGS.num_layers, FLAGS.embedding_size, FLAGS.learning_rate, word2id,
                          mode='train', use_attention=True, beam_search=False, beam_size=5, max_gradient_norm=5.0)
     ckpt = tf.train.get_checkpoint_state(FLAGS.model_dir)
     if ckpt and tf.train.checkpoint_exists(ckpt.model_checkpoint_path):
         print('Reloading model parameters..')
-        model.restore(sess, ckpt.model_checkpoint_path)
+        model.saver.restore(sess, ckpt.model_checkpoint_path)
     else:
         print('Created new model parameters..')
         sess.run(tf.global_variables_initializer())
