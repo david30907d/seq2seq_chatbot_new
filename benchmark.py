@@ -5,6 +5,7 @@ from tqdm import tqdm
 import math
 import os
 from nmt.utils.evaluation_utils import evaluate
+import numpy as np
 
 tf.app.flags.DEFINE_integer('rnn_size', 1024, 'Number of hidden units in each layer')
 tf.app.flags.DEFINE_integer('num_layers', 2, 'Number of layers in each encoder and decoder')
@@ -47,15 +48,14 @@ with tf.Session(config=CONFIG) as sess:
     else:
         raise ValueError('No such file:[{}]'.format(FLAGS.model_dir))
 
-    with open('testing.groudtruth', 'r', encoding='utf-8'), open('testing.predict', 'r', encoding='utf-8') as source, target:
+    with open('data/testing.input', 'r', encoding='utf-8') as source, open('data/testing.predict', 'w', encoding='utf-8') as target:
         for sentence in source:
             batch = sentence2enco(sentence, word2id)
             predicted_ids = model.infer(sess, batch)
             # print(predicted_ids)
-            target.write(predict_ids_to_seq(predicted_ids, id2word, 5) + '\n')
+            print(predict_ids_to_seq(predicted_ids, id2word, 1))
+            target.write(predict_ids_to_seq(predicted_ids, id2word, 1) + '\n')
 
     for metric in ['bleu', 'rouge']:
-        score = evaluate('testing.groudtruth', 'testing.predict', metric)
+        score = evaluate('data/testing.output', 'data/testing.predict', metric)
         print(metric, score / 100)
-
-
