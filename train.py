@@ -17,7 +17,7 @@ tf.app.flags.DEFINE_string('model_dir', 'model/', 'Path to save model checkpoint
 tf.app.flags.DEFINE_string('model_name', 'chatbot.ckpt', 'File name used for model checkpoints')
 FLAGS = tf.app.flags.FLAGS
 
-data_path = 'seq2seq_chatbot_new/data/train.pkl'
+data_path = 'data/train.pkl'
 word2id, id2word, trainingSamples = loadDataset(data_path)
 
 with tf.Session() as sess:
