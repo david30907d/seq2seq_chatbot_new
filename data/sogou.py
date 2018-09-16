@@ -19,14 +19,15 @@ for file in  ['content.txt', 'contenttitle.txt', 'url.txt', 'docno.txt']:
 # turn lines into json format
 result = []
 for content, contenttitle, url, docno in zip(tmp['content.txt'], tmp['contenttitle.txt'], tmp['url.txt'], tmp['docno.txt']):
-	result.append(
-		{
-			'content':content.strip(),
-			'contenttitle':contenttitle.strip(),
-			'url':url.strip(),
-			'docno':docno.strip()
-		}
-	)
+	if content.strip() and contenttitle.strip():
+		result.append(
+			{
+				'content':content.strip(),
+				'contenttitle':contenttitle.strip(),
+				'url':url.strip(),
+				'docno':docno.strip()
+			}
+		)
 json.dump(result, open('sogou.json', 'w', encoding='utf-8'))
 
 # remove redundent file

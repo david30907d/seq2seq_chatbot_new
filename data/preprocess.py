@@ -15,9 +15,8 @@ def extract_character_vocab(X_train, y_train):
     '''
     构造映射表
     '''
-    special_words = ['<PAD>', '<UNK>', '<GO>',  '<EOS>']
+    special_words = ['<pad>', '<go>', '<eos>',  '<unk>']
     set_words = [word for word, count in sorted(Counter(list(chain(*X_train)) + list(chain(*y_train))).items(), key=lambda x: -x[1])[:RESERVED_WORDS]]
-    # 这里要把四个特殊字符添加进词典
     int_to_vocab = {idx: word for idx, word in enumerate(special_words + set_words)}
     vocab_to_int = {word: idx for idx, word in int_to_vocab.items()}
     return int_to_vocab, vocab_to_int

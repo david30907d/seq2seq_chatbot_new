@@ -10,12 +10,12 @@ tf.app.flags.DEFINE_integer('num_layers', 2, 'Number of layers in each encoder a
 tf.app.flags.DEFINE_integer('embedding_size', 1024, 'Embedding dimensions of encoder and decoder inputs')
 
 tf.app.flags.DEFINE_float('learning_rate', 0.0001, 'Learning rate')
-tf.app.flags.DEFINE_integer('batch_size', 128, 'Batch size')
+tf.app.flags.DEFINE_integer('batch_size', 80, 'Batch size')
 tf.app.flags.DEFINE_integer('numEpochs', 30, 'Maximum # of training epochs')
 tf.app.flags.DEFINE_integer('steps_per_checkpoint', 100, 'Save model checkpoint every this iteration')
 tf.app.flags.DEFINE_string('model_dir', 'model/', 'Path to save model checkpoints')
 tf.app.flags.DEFINE_string('model_name', 'chatbot.ckpt', 'File name used for model checkpoints')
-tf.app.flags.DEFINE_string('data_path', 'data/train.pkl', 'filepath of dataset')
+tf.app.flags.DEFINE_string('data_path', 'data/training.pkl', 'filepath of dataset')
 FLAGS = tf.app.flags.FLAGS
 
 word2id, id2word, trainingSamples = loadDataset(FLAGS.data_path)
