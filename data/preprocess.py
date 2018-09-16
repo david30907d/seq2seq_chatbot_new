@@ -31,7 +31,7 @@ def dump_dataset(name='training'):
     if name == 'training':
         dataset['trainingSamples'] = [([TABLE['word2id'].get(c, 1) for c in context], [TABLE['word2id'].get(t, 1) for t in title]) for context, title in zip(X_train, y_train)]
     else:
-        TABLE['trainingSamples'] = [([TABLE['word2id'].get(c, 1) for c in context], [TABLE['word2id'].get(t, 1) for t in title]) for context, title in zip(X_test, y_test)]       
+        dataset['trainingSamples'] = [([TABLE['word2id'].get(c, 1) for c in context], [TABLE['word2id'].get(t, 1) for t in title]) for context, title in zip(X_test, y_test)]       
     pickle.dump(dataset, open('{}.pkl'.format(name), 'wb'))
 
 dump_dataset('training')
