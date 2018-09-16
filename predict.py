@@ -15,10 +15,10 @@ tf.app.flags.DEFINE_integer('numEpochs', 30, 'Maximum # of training epochs')
 tf.app.flags.DEFINE_integer('steps_per_checkpoint', 100, 'Save model checkpoint every this iteration')
 tf.app.flags.DEFINE_string('model_dir', 'model/', 'Path to save model checkpoints')
 tf.app.flags.DEFINE_string('model_name', 'chatbot.ckpt', 'File name used for model checkpoints')
+tf.app.flags.DEFINE_string('data_path', 'data/training.pkl', 'filepath of dataset')
 FLAGS = tf.app.flags.FLAGS
 
-data_path = 'data/test.pkl'
-word2id, id2word, trainingSamples = loadDataset(data_path)
+word2id, id2word, trainingSamples = loadDataset(FLAGS.data_path)
 
 def predict_ids_to_seq(predict_ids, id2word, beam_szie):
     '''

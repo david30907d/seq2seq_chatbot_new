@@ -1,0 +1,5 @@
+udicOpenData
+sklearn
+tqdm
+tensorflow
+numpy

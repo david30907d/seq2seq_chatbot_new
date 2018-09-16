@@ -1,5 +1,5 @@
 import tensorflow as tf
-from data_helpers import loadDataset, getBatches, sentence2enco
+from data_helpers import loadDataset, getBatches
 from model import Seq2SeqModel
 from tqdm import tqdm
 import math
@@ -17,10 +17,10 @@ tf.app.flags.DEFINE_integer('numEpochs', 30, 'Maximum # of training epochs')
 tf.app.flags.DEFINE_integer('steps_per_checkpoint', 100, 'Save model checkpoint every this iteration')
 tf.app.flags.DEFINE_string('model_dir', 'model/', 'Path to save model checkpoints')
 tf.app.flags.DEFINE_string('model_name', 'chatbot.ckpt', 'File name used for model checkpoints')
+tf.app.flags.DEFINE_string('data_path', 'data/testing.pkl', 'filepath of dataset')
 FLAGS = tf.app.flags.FLAGS
 
-data_path = 'data/test.pkl'
-word2id, id2word, trainingSamples = loadDataset(data_path)
+word2id, id2word, trainingSamples = loadDataset(FLAGS.data_path)
 
 def predict_ids_to_seq(predict_ids, id2word, beam_szie):
     '''
@@ -34,6 +34,13 @@ def predict_ids_to_seq(predict_ids, id2word, beam_szie):
             predict_list = np.ndarray.tolist(single_predict[:, :, i])
             predict_seq = [id2word[idx] for idx in predict_list[0]]
             return "".join(predict_seq)
+
+def gen_testing_data():
+    with open('testing.output', 'w', encoding='utf-8') as f:
+        for input, label in trainingSamples:
+            f.write(''.join([id2word[i] for i in label]) + '\n')
+
+gen_testing_data()
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 CONFIG = tf.ConfigProto()
 CONFIG.gpu_options.allow_growth = True
@@ -48,11 +55,10 @@ with tf.Session(config=CONFIG) as sess:
     else:
         raise ValueError('No such file:[{}]'.format(FLAGS.model_dir))
 
-    with open('data/testing.input', 'r', encoding='utf-8') as source, open('data/testing.predict', 'w', encoding='utf-8') as target:
-        for sentence in source:
-            batch = sentence2enco(sentence, word2id)
+    with open('data/testing.predict', 'w', encoding='utf-8') as target:
+        for input_wordIds, label_wordIds in trainingSamples:
+            batch = createBatch([[input_wordIds, []]])
             predicted_ids = model.infer(sess, batch)
-            # print(predicted_ids)
             print(predict_ids_to_seq(predicted_ids, id2word, 1))
             target.write(predict_ids_to_seq(predicted_ids, id2word, 1) + '\n')
 
